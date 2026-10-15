@@ -25,7 +25,13 @@ RUN mkdir -p /install-tl && \
 
 # 安装 TeX Live
 RUN cd /install-tl && \
-    ./install-tl -no-interaction -scheme=full
+    printf '%s\n' \
+      'selected_scheme scheme-full' \
+      'tlpdbopt_sys_bin /usr/local/bin' \
+      'tlpdbopt_sys_man /usr/local/share/man' \
+      'tlpdbopt_sys_info /usr/local/share/info' \
+      > texlive.profile && \
+    ./install-tl -no-interaction -profile texlive.profile
 
 # 清理
 RUN rm -rf /install-tl
@@ -37,11 +43,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# add path
-ENV TEXLIVE_VERSION=2025 \
-    TEXLIVE_INSTALL_DIR="/usr/local/texlive"
-
-ENV PATH="${TEXLIVE_INSTALL_DIR}/${TEXLIVE_VERSION}/bin/x86_64-linux:$PATH"
-
 # # verify whether pygmentize successfully installed（optional）
 # RUN which pygmentize && pygmentize -V
+
+# Set up the path for texlive
+ENV PATH="/usr/local/texlive/2026/bin/x86_64-linux:${PATH}"
+
+RUN command -v latexmk && latexmk -v
