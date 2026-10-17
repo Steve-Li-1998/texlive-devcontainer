@@ -81,7 +81,12 @@ RUN apt-get update && \
     npm cache clean --force && \
     mkdir -p /etc/mermaid && \
     printf '{"executablePath": "/usr/bin/chromium", "args": ["--no-sandbox", "--disable-gpu"]}\n' > /etc/mermaid/puppeteer.json && \
-    printf '#!/bin/sh\nexec /opt/mermaid-cli/node_modules/.bin/mmdc -p /etc/mermaid/puppeteer.json "$@"\n' > /usr/local/bin/mmdc && \
+    printf '%s\n' \
+        '#!/bin/sh' \
+        '# mermaid.sty runs mmdc in the cwd but writes the .mmd into --output-directory (e.g. rtex)' \
+        '[ -n "$TEXMF_OUTPUT_DIRECTORY" ] && cd "$TEXMF_OUTPUT_DIRECTORY"' \
+        'exec /opt/mermaid-cli/node_modules/.bin/mmdc -p /etc/mermaid/puppeteer.json "$@"' \
+        > /usr/local/bin/mmdc && \
     chmod +x /usr/local/bin/mmdc && \
     printf 'graph LR\n  A --> B\n' > /tmp/check.mmd && \
     mmdc -i /tmp/check.mmd -o /tmp/check.pdf && \
