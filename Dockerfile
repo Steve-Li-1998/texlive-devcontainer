@@ -17,24 +17,19 @@ RUN apt-get update && \
     ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# 下载 TeX Live 安装器
+# 下载 TeX Live 安装器# 安装 TeX Live
 RUN mkdir -p /install-tl && \
     cd /install-tl && \
     wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz && \
-    tar -xzf install-tl-unx.tar.gz --strip-components=1
-
-# 安装 TeX Live
-RUN cd /install-tl && \
+    tar -xzf install-tl-unx.tar.gz --strip-components=1 && \
     printf '%s\n' \
       'selected_scheme scheme-full' \
       'tlpdbopt_sys_bin /usr/local/bin' \
       'tlpdbopt_sys_man /usr/local/share/man' \
       'tlpdbopt_sys_info /usr/local/share/info' \
       > texlive.profile && \
-    ./install-tl -no-interaction -profile texlive.profile
-
-# 清理
-RUN rm -rf /install-tl
+    ./install-tl -no-interaction -profile texlive.profile && \
+    rm -rf /install-tl
 
 # install Python 3 and pip，then install pygments
 RUN apt-get update && \
