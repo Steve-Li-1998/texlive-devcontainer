@@ -1,0 +1,14 @@
+variables:
+  FILE_NAME: "main"
+
+build-pdf:
+  stage: build
+  image: "<IMAGE>:latest"
+  script:
+    # .latexmkrc selects LuaLaTeX; the image's /etc/LatexMk adds -shell-escape
+    - latexmk -interaction=nonstopmode -file-line-error -synctex=1 "$FILE_NAME.tex"
+  artifacts:
+    paths:
+      - $FILE_NAME.pdf
+      - $FILE_NAME.log
+    expire_in: 1 week
