@@ -8,6 +8,11 @@
   "remoteUser": "vscode",
   // Remap vscode's UID/GID to the host user's at startup (host UID may not be 1000)
   "updateRemoteUserUID": true,
+  // rtex starts lualatex without -shell-escape; mermaid/plantuml need it.
+  // kpathsea reads texmf.cnf variables from the environment.
+  "remoteEnv": {
+    "shell_escape": "t"
+  },
   "customizations": {
     "vscode": {
       // Not on the Marketplace; install the .vsix baked into the image
