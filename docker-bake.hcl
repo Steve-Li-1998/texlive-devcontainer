@@ -1,11 +1,11 @@
 // Build and push both images in one run so they share the base stage:
 //   docker buildx bake --push
-variable "REGISTRY" {
-  default = "registry.gitlab.fachschaften.org/masterarbeit"
-}
-
-variable "REPOS" {
-  default = ["thesis", "final-presentation"]
+variable "IMAGES" {
+  default = [
+    "registry.gitlab.fachschaften.org/masterarbeit/thesis",
+    "registry.gitlab.fachschaften.org/masterarbeit/final-presentation",
+    "ghcr.io/steve-li-1998/texlive-devcontainer",
+  ]
 }
 
 group "default" {
@@ -15,11 +15,11 @@ group "default" {
 target "ci" {
   context = "."
   target  = "ci"
-  tags    = [for repo in REPOS : "${REGISTRY}/${repo}:latest"]
+  tags    = [for image in IMAGES : "${image}:latest"]
 }
 
 target "dev" {
   context = "."
   target  = "dev"
-  tags    = [for repo in REPOS : "${REGISTRY}/${repo}:dev"]
+  tags    = [for image in IMAGES : "${image}:dev"]
 }
