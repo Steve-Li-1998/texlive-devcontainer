@@ -1,0 +1,25 @@
+{
+  "name": "TeX Live 2026 + rtex",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "target": "dev"
+  },
+  "remoteUser": "vscode",
+  // Remap vscode's UID/GID to the host user's at startup (host UID may not be 1000)
+  "updateRemoteUserUID": true,
+  "customizations": {
+    "vscode": {
+      // Not on the Marketplace; install the .vsix baked into the image
+      "extensions": [
+        "/opt/rtex/realtime-tex.vsix"
+      ],
+      "settings": {
+        "realtimeTex.serverPath": "/usr/local/bin/rtex",
+        "realtimeTex.texliveBin": "/usr/local/texlive/bin-current",
+        // rtex is baked into the image; don't let the extension replace it
+        "realtimeTex.updateCheck": "off"
+      }
+    }
+  }
+}
