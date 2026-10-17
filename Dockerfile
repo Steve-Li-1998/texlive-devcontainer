@@ -24,6 +24,7 @@ RUN mkdir -p /install-tl && \
     tar -xzf install-tl-unx.tar.gz --strip-components=1 && \
     printf '%s\n' \
       'selected_scheme scheme-full' \
+      'instopt_adjustpath 1' \
       'tlpdbopt_sys_bin /usr/local/bin' \
       'tlpdbopt_sys_man /usr/local/share/man' \
       'tlpdbopt_sys_info /usr/local/share/info' \
@@ -40,8 +41,5 @@ RUN apt-get update && \
 
 # # verify whether pygmentize successfully installed（optional）
 # RUN which pygmentize && pygmentize -V
-
-# Set up the path for texlive
-ENV PATH="/usr/local/texlive/2026/bin/x86_64-linux:${PATH}"
 
 RUN command -v latexmk && latexmk -v
