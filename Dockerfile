@@ -42,6 +42,59 @@ RUN apt-get update && \
 # # verify whether pygmentize successfully installed（optional）
 # RUN which pygmentize && pygmentize -V
 
+# Diagram tools for the plantuml and mermaid LaTeX packages
+ARG PLANTUML_VERSION=1.2026.8
+ARG NODE_VERSION=22.23.3
+# mermaid.sty calls `mmdc -f`; mermaid-cli 12 dropped -f/--pdfFit, so stay on 11.x
+ARG MERMAID_CLI_VERSION=11.17.0
+
+ENV PLANTUML_JAR=/opt/plantuml/plantuml.jar \
+    PUPPETEER_SKIP_DOWNLOAD=1
+
+# PlantUML: Java + Graphviz + pinned plantuml.jar
+RUN apt-get update && \
+    apt-get install -y default-jre-headless graphviz && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /opt/plantuml && \
+    curl -fsSL -o "${PLANTUML_JAR}" \
+        "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar" && \
+    printf '#!/bin/sh\nexec java -Djava.awt.headless=true -jar "%s" "$@"\n' "${PLANTUML_JAR}" > /usr/local/bin/plantuml && \
+    chmod +x /usr/local/bin/plantuml && \
+    plantuml -version
+
+# Mermaid: Node.js (official build) + mermaid-cli, rendering with Debian's Chromium
+RUN apt-get update && \
+    apt-get install -y chromium && \
+    rm -rf /var/lib/apt/lists/* && \
+    case "$(dpkg --print-architecture)" in \
+        amd64) node_arch=x64 ;; \
+        arm64) node_arch=arm64 ;; \
+        *) echo "unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+    esac && \
+    node_tar="node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" && \
+    cd /tmp && \
+    curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/${node_tar}" && \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" | grep " ${node_tar}\$" | sha256sum -c - && \
+    tar -xJf "${node_tar}" -C /usr/local --strip-components=1 --exclude='*.md' --exclude=LICENSE && \
+    rm "${node_tar}" && \
+    npm install --prefix /opt/mermaid-cli "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}" && \
+    npm cache clean --force && \
+    mkdir -p /etc/mermaid && \
+    printf '{"executablePath": "/usr/bin/chromium", "args": ["--no-sandbox", "--disable-gpu"]}\n' > /etc/mermaid/puppeteer.json && \
+    printf '#!/bin/sh\nexec /opt/mermaid-cli/node_modules/.bin/mmdc -p /etc/mermaid/puppeteer.json "$@"\n' > /usr/local/bin/mmdc && \
+    chmod +x /usr/local/bin/mmdc && \
+    printf 'graph LR\n  A --> B\n' > /tmp/check.mmd && \
+    mmdc -i /tmp/check.mmd -o /tmp/check.pdf && \
+    rm /tmp/check.mmd /tmp/check.pdf
+
+# Both packages call external tools, so latexmk runs every engine with -shell-escape.
+# mermaid.sty re-renders on every run and Chromium stamps the PDF with the current time;
+# ignore those lines so latexmk doesn't rerun until "too many passes".
+RUN printf '%s\n' \
+        "set_tex_cmds('-shell-escape %O %S');" \
+        "\$hash_calc_ignore_pattern{'pdf'} = '^/(CreationDate|ModDate) \\(D:';" \
+        > /etc/LatexMk
+
 RUN command -v latexmk && latexmk -v
 
 # ---------------------------------------------------------------------------
