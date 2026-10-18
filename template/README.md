@@ -33,7 +33,7 @@ sed -i 's|<IMAGE>|registry.gitlab.fachschaften.org/masterarbeit/thesis|; s|<PROJ
 Also check:
 
 - **Main file:** CI builds `main.tex`. Change `FILE_NAME` in `.gitlab-ci.yml` if yours is named differently.
-- **Registry access:** the images are private. Run `docker login` for the registry before opening the dev container. A GitLab CI job in another project can only pull them if that project is allowed in the image project's *Settings → CI/CD → Job token permissions*.
+- **Registry access:** `ghcr.io/steve-li-1998/texlive-devcontainer` is public and needs no login. The GitLab registry images are private: run `docker login` for that registry before opening the dev container, and a GitLab CI job in another project can only pull them if that project is allowed in the image project's *Settings → CI/CD → Job token permissions*.
 - **First start:** if the Realtime TeX extension is missing, install it via *Extensions: Install from VSIX…* → `/opt/rtex/realtime-tex.vsix`.
 
 ## Writing the document

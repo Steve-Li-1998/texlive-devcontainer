@@ -2,6 +2,8 @@
   "name": "<PROJECT_NAME>",
   // Prebuilt dev image; <IMAGE> is the image repository without a tag
   "image": "<IMAGE>:dev",
+  // Public, no login needed:
+  // "image": "ghcr.io/steve-li-1998/texlive-devcontainer:dev",
   "remoteUser": "vscode",
   // Remap vscode's UID/GID to the host user's at startup (host UID may not be 1000)
   "updateRemoteUserUID": true,
