@@ -112,7 +112,10 @@ FROM base AS dev
 # HenryXiaoYang/realtime-tex once upstream releases it
 ARG RTEX_REPO=Steve-Li-1998/realtime-tex
 ARG RTEX_VERSION=v0.0.4.0.1
-ARG RTEX_VSIX_VERSION=0.0.1
+# Fork release with a fix for jumping from the preview to files no editor has open;
+# switch back to HenryXiaoYang/realtime-tex-vsc-plugin once upstream releases it
+ARG RTEX_VSIX_REPO=Steve-Li-1998/realtime-tex-vsc-plugin
+ARG RTEX_VSIX_VERSION=0.0.1-fix-jump
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -133,7 +136,7 @@ RUN case "$(dpkg --print-architecture)" in \
     curl -fsSLO "${base_url}/rtex-${triple}.tar.gz.sha256" && \
     sha256sum -c "rtex-${triple}.tar.gz.sha256" && \
     tar -xzf "rtex-${triple}.tar.gz" -C /opt/rtex --strip-components=1 && \
-    vsix_url="https://github.com/HenryXiaoYang/realtime-tex-vsc-plugin/releases/download/v${RTEX_VSIX_VERSION}" && \
+    vsix_url="https://github.com/${RTEX_VSIX_REPO}/releases/download/v${RTEX_VSIX_VERSION}" && \
     curl -fsSLO "${vsix_url}/realtime-tex-${RTEX_VSIX_VERSION}.vsix" && \
     curl -fsSLO "${vsix_url}/realtime-tex-${RTEX_VSIX_VERSION}.vsix.sha256" && \
     sha256sum -c "realtime-tex-${RTEX_VSIX_VERSION}.vsix.sha256" && \
