@@ -114,7 +114,10 @@ RUN test -d "/usr/local/texlive/${TEXLIVE_VERSION}" || \
 # ---------------------------------------------------------------------------
 FROM base AS dev
 
-ARG RTEX_VERSION=v0.0.4
+# Fork release with a fix for blank pages (empty fonts table); switch back to
+# HenryXiaoYang/realtime-tex once upstream releases it
+ARG RTEX_REPO=Steve-Li-1998/realtime-tex
+ARG RTEX_VERSION=v0.0.4.0.1
 ARG RTEX_VSIX_VERSION=0.0.1
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -131,7 +134,7 @@ RUN case "$(dpkg --print-architecture)" in \
         *) echo "unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
     esac && \
     mkdir -p /tmp/rtex /opt/rtex && cd /tmp/rtex && \
-    base_url="https://github.com/HenryXiaoYang/realtime-tex/releases/download/${RTEX_VERSION}" && \
+    base_url="https://github.com/${RTEX_REPO}/releases/download/${RTEX_VERSION}" && \
     curl -fsSLO "${base_url}/rtex-${triple}.tar.gz" && \
     curl -fsSLO "${base_url}/rtex-${triple}.tar.gz.sha256" && \
     sha256sum -c "rtex-${triple}.tar.gz.sha256" && \
