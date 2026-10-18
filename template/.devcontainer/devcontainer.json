@@ -4,6 +4,8 @@
   "image": "<IMAGE>:dev",
   // Public, no login needed:
   // "image": "ghcr.io/steve-li-1998/texlive-devcontainer:dev",
+  // Docker's default /dev/shm is 64 MB; rtex builds there (see realtimeTex.buildDir) and Chromium (mmdc) uses it too
+  "runArgs": ["--shm-size=1g"],
   "remoteUser": "vscode",
   // Remap vscode's UID/GID to the host user's at startup (host UID may not be 1000)
   "updateRemoteUserUID": true,
@@ -24,6 +26,8 @@
         "realtimeTex.texliveBin": "/usr/local/texlive/bin-current",
         // rtex is baked into the image; don't let the extension replace it
         "realtimeTex.updateCheck": "off",
+        // Keep rtex's frequent rebuilds in memory instead of on the SSD
+        "realtimeTex.buildDir": "/dev/shm/rtex",
         // rtex does the live preview; build with LaTeX Workshop only on demand
         "latex-workshop.latex.autoBuild.run": "never",
         // PDF and build files go to out/ next to the main .tex file
