@@ -47,6 +47,7 @@ Also check:
   \fi
   ```
 - With `babel` and `ngerman`, use `\usepackage[ngerman,shorthands=off]{babel}`; the active `"` breaks rtex's live preview.
+- For Mermaid, prefer `\usepackage{ltmermaid}`: the LuaLaTeX version of `mermaid.sty`, with the same `mermaid` environment, that handles the output directory (used by rtex and the LaTeX Workshop settings) by itself and needs no extra line.
 - With `mermaid`, add this right after `\usepackage{mermaid}`. The package creates `mermaid/` in the working directory, but writes into the output directory, which rtex sets; without the line, rtex's live engine stops with "I can't write on file":
   ```latex
   \ShellEscape{mkdir -p "${TEXMF_OUTPUT_DIRECTORY:-.}/mermaid"}
