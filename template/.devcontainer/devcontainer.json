@@ -19,7 +19,9 @@
       "extensions": [
         // Not on the Marketplace; install the .vsix baked into the image
         "/opt/rtex/realtime-tex.vsix",
-        "james-yu.latex-workshop"
+        "james-yu.latex-workshop",
+        "streetsidesoftware.code-spell-checker",
+        "ltex-plus.vscode-ltex-plus"
       ],
       "settings": {
         "realtimeTex.serverPath": "/usr/local/bin/rtex",
