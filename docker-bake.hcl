@@ -1,10 +1,11 @@
 // Build and push both images in one run so they share the base stage:
 //   docker buildx bake --push
+// Base names: ci pushes <name>-ci:latest, dev pushes <name>-devcontainer:latest
 variable "IMAGES" {
   default = [
-    "registry.gitlab.fachschaften.org/masterarbeit/thesis",
-    "registry.gitlab.fachschaften.org/masterarbeit/final-presentation",
-    "ghcr.io/steve-li-1998/texlive-devcontainer",
+    "registry.gitlab.fachschaften.org/masterarbeit/thesis/texlive",
+    "registry.gitlab.fachschaften.org/masterarbeit/final-presentation/texlive",
+    "ghcr.io/steve-li-1998/texlive",
   ]
 }
 
@@ -15,11 +16,11 @@ group "default" {
 target "ci" {
   context = "."
   target  = "ci"
-  tags    = [for image in IMAGES : "${image}:latest"]
+  tags    = [for image in IMAGES : "${image}-ci:latest"]
 }
 
 target "dev" {
   context = "."
   target  = "dev"
-  tags    = [for image in IMAGES : "${image}:dev"]
+  tags    = [for image in IMAGES : "${image}-devcontainer:latest"]
 }

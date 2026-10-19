@@ -19,21 +19,21 @@ Replace the placeholders:
 
 | Placeholder | In | Example |
 |---|---|---|
-| `<IMAGE>` | `.devcontainer/devcontainer.json`, `.gitlab-ci.yml` | `registry.gitlab.fachschaften.org/masterarbeit/thesis` or `ghcr.io/steve-li-1998/texlive-devcontainer` |
+| `<IMAGE>` | `.devcontainer/devcontainer.json`, `.gitlab-ci.yml` | `registry.gitlab.fachschaften.org/masterarbeit/thesis/texlive` or `ghcr.io/steve-li-1998/texlive` |
 | `<PROJECT_NAME>` | `.devcontainer/devcontainer.json` | `Masterarbeit` |
 
-`<IMAGE>` is the repository without a tag: the dev container appends `:dev`, CI appends `:latest`. For example:
+`<IMAGE>` is the base name of the two images: the dev container appends `-devcontainer:latest`, CI appends `-ci:latest`. For example:
 
 ```bash
 cd /path/to/new-project
-sed -i 's|<IMAGE>|registry.gitlab.fachschaften.org/masterarbeit/thesis|; s|<PROJECT_NAME>|Masterarbeit|' \
+sed -i 's|<IMAGE>|registry.gitlab.fachschaften.org/masterarbeit/thesis/texlive|; s|<PROJECT_NAME>|Masterarbeit|' \
   .devcontainer/devcontainer.json .gitlab-ci.yml
 ```
 
 Also check:
 
 - **Main file:** CI builds `main.tex`. Change `FILE_NAME` in `.gitlab-ci.yml` if yours is named differently.
-- **Registry access:** `ghcr.io/steve-li-1998/texlive-devcontainer` is public and needs no login. The GitLab registry images are private: run `docker login` for that registry before opening the dev container, and a GitLab CI job in another project can only pull them if that project is allowed in the image project's *Settings → CI/CD → Job token permissions*.
+- **Registry access:** `ghcr.io/steve-li-1998/texlive-devcontainer` and `ghcr.io/steve-li-1998/texlive-ci` are public and need no login. The GitLab registry images are private: run `docker login` for that registry before opening the dev container, and a GitLab CI job in another project can only pull them if that project is allowed in the image project's *Settings → CI/CD → Job token permissions*.
 - **First start:** if the Realtime TeX extension is missing, install it via *Extensions: Install from VSIX…* → `/opt/rtex/realtime-tex.vsix`.
 
 ## Writing the document

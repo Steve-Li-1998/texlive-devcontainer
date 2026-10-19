@@ -1,9 +1,9 @@
 {
   "name": "<PROJECT_NAME>",
-  // Prebuilt dev image; <IMAGE> is the image repository without a tag
-  "image": "<IMAGE>:dev",
+  // Prebuilt dev image; <IMAGE> is the image base name (without -devcontainer/-ci and tag)
+  "image": "<IMAGE>-devcontainer:latest",
   // Public, no login needed:
-  // "image": "ghcr.io/steve-li-1998/texlive-devcontainer:dev",
+  // "image": "ghcr.io/steve-li-1998/texlive-devcontainer:latest",
   // Docker's default /dev/shm is 64 MB; rtex builds there (see realtimeTex.buildDir) and Chromium (mmdc) uses it too
   "runArgs": ["--shm-size=1g"],
   "remoteUser": "vscode",
