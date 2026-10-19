@@ -45,7 +45,11 @@
         ],
         "latex-workshop.latex.recipes": [
           { "name": "latexmk (LuaLaTeX)", "tools": ["latexmk"] }
-        ]
+        ],
+        // Spelling is left to Code Spell Checker; LTeX+ checks grammar and style
+        "ltex.disabledRules": {
+          "en-US": ["MORFOLOGIK_RULE_EN_US"]
+        }
       }
     }
   }
