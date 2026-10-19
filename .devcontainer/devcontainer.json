@@ -49,6 +49,13 @@
         // Spelling is left to Code Spell Checker; LTeX+ checks grammar and style
         "ltex.disabledRules": {
           "en-US": ["MORFOLOGIK_RULE_EN_US"]
+        },
+        // Soft-wrap long lines in .tex and .bib files (display only)
+        "[latex]": {
+          "editor.wordWrap": "on"
+        },
+        "[bibtex]": {
+          "editor.wordWrap": "on"
         }
       }
     }
