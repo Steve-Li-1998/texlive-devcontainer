@@ -102,6 +102,12 @@ RUN printf '%s\n' \
 
 RUN command -v latexmk && latexmk -v
 
+# The installer always fetches the current TeX Live; fail once it moves to a new year so
+# TEXLIVE_VERSION (here and in docker-bake.hcl, which puts it in the image tag) gets bumped
+ARG TEXLIVE_VERSION=2026
+RUN test -d "/usr/local/texlive/${TEXLIVE_VERSION}" || \
+    { echo "Expected TeX Live ${TEXLIVE_VERSION}, found: $(ls /usr/local/texlive)" >&2; exit 1; }
+
 # ---------------------------------------------------------------------------
 # Dev container: base + rtex (realtime-tex) + non-root user
 # Build with: docker build --target dev .
