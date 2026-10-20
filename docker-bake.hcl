@@ -18,11 +18,11 @@ variable "TEXLIVE_VERSION" {
 }
 
 variable "RTEX_VERSION" {
-  default = "v0.0.4"
+  default = "v0.0.5.0.1"
 }
 
 variable "RTEX_VSIX_VERSION" {
-  default = "0.0.1"
+  default = "0.0.1-fix-jump"
 }
 
 variable "VERSION_TAG" {

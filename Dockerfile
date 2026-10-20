@@ -114,10 +114,10 @@ RUN test -d "/usr/local/texlive/${TEXLIVE_VERSION}" || \
 # ---------------------------------------------------------------------------
 FROM base AS dev
 
-# Fork release with a fix for blank pages (empty fonts table); switch back to
-# HenryXiaoYang/realtime-tex once upstream releases it
+# Fork release: v0.0.5 plus the fix for stale diagnostics and crashed paragraphs (upstream
+# issue #11); switch back to HenryXiaoYang/realtime-tex once upstream releases it
 ARG RTEX_REPO=Steve-Li-1998/realtime-tex
-ARG RTEX_VERSION=v0.0.4.0.1
+ARG RTEX_VERSION=v0.0.5.0.1
 # Fork release with a fix for jumping from the preview to files no editor has open;
 # switch back to HenryXiaoYang/realtime-tex-vsc-plugin once upstream releases it
 ARG RTEX_VSIX_REPO=Steve-Li-1998/realtime-tex-vsc-plugin
