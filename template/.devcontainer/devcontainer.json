@@ -17,8 +17,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        // Not on the Marketplace; install the .vsix baked into the image
-        "/opt/rtex/realtime-tex.vsix",
+        "henryxiaoyang.realtime-tex@0.0.3",
         "james-yu.latex-workshop",
         "streetsidesoftware.code-spell-checker",
         "ltex-plus.vscode-ltex-plus"

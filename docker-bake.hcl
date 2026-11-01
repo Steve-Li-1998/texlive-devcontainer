@@ -1,7 +1,7 @@
 // Build and push both images in one run so they share the base stage:
 //   docker buildx bake --push
 // Base names: ci pushes <name>-ci, dev pushes <name>-devcontainer, each tagged
-// latest and texlive<year>-rtex<rtex version>-ext<extension version>
+// latest and texlive<year>.<build date>-rtex<rtex version>
 variable "IMAGES" {
   default = [
     "registry.gitlab.fachschaften.org/masterarbeit/thesis/texlive",
@@ -18,15 +18,17 @@ variable "TEXLIVE_VERSION" {
 }
 
 variable "RTEX_VERSION" {
-  default = "v0.0.4"
+  default = "v0.0.6"
 }
 
-variable "RTEX_VSIX_VERSION" {
-  default = "0.0.1"
+// The day TeX Live was installed: packages keep changing within a TeX Live year. When reusing
+// an existing base image, set this to that image's build date instead of today's.
+variable "TEXLIVE_DATE" {
+  default = formatdate("YYYYMMDD", timestamp())
 }
 
 variable "VERSION_TAG" {
-  default = "texlive${TEXLIVE_VERSION}-rtex${trimprefix(RTEX_VERSION, "v")}-ext${RTEX_VSIX_VERSION}"
+  default = "texlive${TEXLIVE_VERSION}.${TEXLIVE_DATE}-rtex${trimprefix(RTEX_VERSION, "v")}"
 }
 
 group "default" {
@@ -49,9 +51,8 @@ target "dev" {
   context = "."
   target  = "dev"
   args = {
-    TEXLIVE_VERSION   = TEXLIVE_VERSION
-    RTEX_VERSION      = RTEX_VERSION
-    RTEX_VSIX_VERSION = RTEX_VSIX_VERSION
+    TEXLIVE_VERSION = TEXLIVE_VERSION
+    RTEX_VERSION    = RTEX_VERSION
   }
   tags = concat(
     [for image in IMAGES : "${image}-devcontainer:latest"],

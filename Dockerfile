@@ -114,8 +114,7 @@ RUN test -d "/usr/local/texlive/${TEXLIVE_VERSION}" || \
 # ---------------------------------------------------------------------------
 FROM base AS dev
 
-ARG RTEX_VERSION=v0.0.4
-ARG RTEX_VSIX_VERSION=0.0.1
+ARG RTEX_VERSION=v0.0.6
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -124,7 +123,7 @@ ARG USER_GID=1000
 RUN ln -s "$(dirname "$(readlink -f "$(command -v lualatex)")")" /usr/local/texlive/bin-current
 ENV RTEX_TEXLIVE_BIN=/usr/local/texlive/bin-current
 
-# rtex engine (prebuilt release) and the VS Code extension (.vsix)
+# rtex engine (prebuilt release)
 RUN case "$(dpkg --print-architecture)" in \
         amd64) triple=x86_64-unknown-linux-gnu ;; \
         arm64) triple=aarch64-unknown-linux-gnu ;; \
@@ -136,11 +135,6 @@ RUN case "$(dpkg --print-architecture)" in \
     curl -fsSLO "${base_url}/rtex-${triple}.tar.gz.sha256" && \
     sha256sum -c "rtex-${triple}.tar.gz.sha256" && \
     tar -xzf "rtex-${triple}.tar.gz" -C /opt/rtex --strip-components=1 && \
-    vsix_url="https://github.com/HenryXiaoYang/realtime-tex-vsc-plugin/releases/download/v${RTEX_VSIX_VERSION}" && \
-    curl -fsSLO "${vsix_url}/realtime-tex-${RTEX_VSIX_VERSION}.vsix" && \
-    curl -fsSLO "${vsix_url}/realtime-tex-${RTEX_VSIX_VERSION}.vsix.sha256" && \
-    sha256sum -c "realtime-tex-${RTEX_VSIX_VERSION}.vsix.sha256" && \
-    mv "realtime-tex-${RTEX_VSIX_VERSION}.vsix" /opt/rtex/realtime-tex.vsix && \
     ln -s /opt/rtex/bin/rtex /usr/local/bin/rtex && \
     cd / && rm -rf /tmp/rtex && \
     rtex doctor
