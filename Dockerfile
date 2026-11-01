@@ -45,8 +45,7 @@ RUN apt-get update && \
 # Diagram tools for the plantuml and mermaid LaTeX packages
 ARG PLANTUML_VERSION=1.2026.8
 ARG NODE_VERSION=22.23.3
-# mermaid.sty calls `mmdc -f`; mermaid-cli 12 dropped -f/--pdfFit, so stay on 11.x
-ARG MERMAID_CLI_VERSION=11.17.0
+ARG MERMAID_CLI_VERSION=12.0.0
 
 ENV PLANTUML_JAR=/opt/plantuml/plantuml.jar \
     PUPPETEER_SKIP_DOWNLOAD=1
@@ -83,8 +82,6 @@ RUN apt-get update && \
     printf '{"executablePath": "/usr/bin/chromium", "args": ["--no-sandbox", "--disable-gpu"]}\n' > /etc/mermaid/puppeteer.json && \
     printf '%s\n' \
         '#!/bin/sh' \
-        '# mermaid.sty runs mmdc in the cwd but writes the .mmd into --output-directory (e.g. rtex)' \
-        '[ -n "$TEXMF_OUTPUT_DIRECTORY" ] && cd "$TEXMF_OUTPUT_DIRECTORY"' \
         'exec /opt/mermaid-cli/node_modules/.bin/mmdc -p /etc/mermaid/puppeteer.json "$@"' \
         > /usr/local/bin/mmdc && \
     chmod +x /usr/local/bin/mmdc && \
@@ -92,13 +89,8 @@ RUN apt-get update && \
     mmdc -i /tmp/check.mmd -o /tmp/check.pdf && \
     rm /tmp/check.mmd /tmp/check.pdf
 
-# Both packages call external tools, so latexmk runs every engine with -shell-escape.
-# mermaid.sty re-renders on every run and Chromium stamps the PDF with the current time;
-# ignore those lines so latexmk doesn't rerun until "too many passes".
-RUN printf '%s\n' \
-        "set_tex_cmds('-shell-escape %O %S');" \
-        "\$hash_calc_ignore_pattern{'pdf'} = '^/(CreationDate|ModDate) \\(D:';" \
-        > /etc/LatexMk
+# Both packages call external tools, so latexmk runs every engine with -shell-escape
+RUN printf '%s\n' "set_tex_cmds('-shell-escape %O %S');" > /etc/LatexMk
 
 RUN command -v latexmk && latexmk -v
 

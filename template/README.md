@@ -34,8 +34,6 @@ Also check:
 
 - **Main file:** CI builds `main.tex`. Change `FILE_NAME` in `.gitlab-ci.yml` if yours is named differently.
 - **Registry access:** `ghcr.io/steve-li-1998/texlive-devcontainer` and `ghcr.io/steve-li-1998/texlive-ci` are public and need no login. The GitLab registry images are private: run `docker login` for that registry before opening the dev container, and a GitLab CI job in another project can only pull them if that project is allowed in the image project's *Settings → CI/CD → Job token permissions*.
-- **First start:** if the Realtime TeX extension is missing, install it via *Extensions: Install from VSIX…* → `/opt/rtex/realtime-tex.vsix`.
-
 ## Writing the document
 
 - Compile with LuaLaTeX. Under LuaLaTeX, don't load `\usepackage[T1]{fontenc}`: it turns `ß` into "SS" and `§` into "ğ". If the document must also build with pdfLaTeX, load it only there:
@@ -47,9 +45,4 @@ Also check:
   \fi
   ```
 - With `babel` and `ngerman`, use `\usepackage[ngerman,shorthands=off]{babel}`; the active `"` breaks rtex's live preview.
-- For Mermaid, prefer `\usepackage{ltmermaid}`: the LuaLaTeX version of `mermaid.sty`, with the same `mermaid` environment, that handles the output directory (used by rtex and the LaTeX Workshop settings) by itself and needs no extra line.
-- With `mermaid`, add this right after `\usepackage{mermaid}`. The package creates `mermaid/` in the working directory, but writes into the output directory, which rtex sets; without the line, rtex's live engine stops with "I can't write on file":
-  ```latex
-  \ShellEscape{mkdir -p "${TEXMF_OUTPUT_DIRECTORY:-.}/mermaid"}
-  ```
 - Load `minted` before `csquotes`; the other order warns about `fvextra` and `\@parboxrestore`.
