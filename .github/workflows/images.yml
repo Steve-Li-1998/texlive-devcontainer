@@ -1,9 +1,11 @@
 name: images
 
-# Builds the ci and dev images, compiles a test document in the dev image and pushes both to
-# ghcr.io. Versions come from docker-bake.hcl (keep the Dockerfile's ARG defaults in sync).
+# Builds the ci and dev images for linux/amd64 and linux/arm64 on native runners, compiles a
+# test document in each dev image and pushes both as multi-platform images to ghcr.io.
+# Versions come from docker-bake.hcl (keep the Dockerfile's ARG defaults in sync).
 # Runs by hand, or when a pull request labeled build-images (opened by check-upstream) is
-# merged; then it reuses the published base and pushes.
+# merged; then it reuses the published base and pushes. Only builds of main get the latest
+# and version tags; a build of another branch is tagged test-<branch>.
 on:
   pull_request:
     types: [closed]
@@ -11,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       reuse_base:
-        description: "Reuse the published texlive-ci:latest as the base (off: reinstall TeX Live, about 20 min)"
+        description: "Reuse the published texlive-ci:latest as the base (off: reinstall TeX Live, about 30 min)"
         type: boolean
         default: true
       push:
@@ -27,23 +29,86 @@ concurrency:
   group: images
   cancel-in-progress: false
 
-env:
-  CI_IMAGE: ghcr.io/steve-li-1998/texlive-ci
-  # a merged build-images PR has no inputs: reuse the base and push
-  REUSE_BASE: ${{ github.event_name == 'pull_request' || inputs.reuse_base }}
-  PUSH: ${{ github.event_name == 'pull_request' || inputs.push }}
-
 jobs:
-  build:
+  prepare:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'build-images'))
     runs-on: ubuntu-24.04
-    timeout-minutes: 150
+    outputs:
+      ref: ${{ steps.plan.outputs.ref }}
+      push: ${{ steps.plan.outputs.push }}
+      release: ${{ steps.plan.outputs.release }}
+      texlive_date: ${{ steps.plan.outputs.texlive_date }}
+      base_image: ${{ steps.plan.outputs.base_image }}
+    env:
+      CI_IMAGE: ghcr.io/steve-li-1998/texlive-ci
+      # a merged build-images PR has no inputs: reuse the base and push
+      REUSE_BASE: ${{ github.event_name == 'pull_request' || inputs.reuse_base }}
+      PUSH: ${{ github.event_name == 'pull_request' || inputs.push }}
+      RELEASE: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+      REF: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+    steps:
+      # Reusing the base keeps its TeX Live, so the version tag keeps its install date: the
+      # date of the texlive<year>.<date>-... tag that points at the same image as latest.
+      # Otherwise the date is today's, the same for both platforms.
+      - name: Plan
+        id: plan
+        run: |
+          base_image=
+          if [ "$REUSE_BASE" = true ]; then
+            digest() { docker buildx imagetools inspect "$1" | awk '/^Digest:/ {print $2; exit}'; }
+            latest=$(digest "$CI_IMAGE:latest")
+            platforms=$(docker buildx imagetools inspect --raw "$CI_IMAGE:latest" \
+              | jq -r '[.manifests[]?.platform | select(.os == "linux") | .architecture] | sort | join(",")')
+            if [ "$platforms" != "amd64,arm64" ]; then
+              echo "::error::$CI_IMAGE:latest has platforms '$platforms'; run once with reuse_base off to build both"
+              exit 1
+            fi
+            token=$(curl -fsSL "https://ghcr.io/token?scope=repository:${CI_IMAGE#ghcr.io/}:pull" | jq -r .token)
+            date=
+            for tag in $(curl -fsSL -H "Authorization: Bearer $token" "https://ghcr.io/v2/${CI_IMAGE#ghcr.io/}/tags/list" \
+                           | jq -r '.tags[]' | grep -E '^texlive[0-9]{4}\.[0-9]{8}-'); do
+              if [ "$(digest "$CI_IMAGE:$tag")" = "$latest" ]; then
+                date=$(echo "$tag" | sed -E 's/^texlive[0-9]{4}\.([0-9]{8})-.*/\1/')
+                break
+              fi
+            done
+            [ -n "$date" ] || { echo "::error::No dated tag points at $CI_IMAGE:latest"; exit 1; }
+            base_image=$CI_IMAGE@$latest
+            echo "Reusing $base_image, TeX Live installed on $date"
+          else
+            date=$(date -u +%Y%m%d)
+            echo "Installing TeX Live, date $date"
+          fi
+          {
+            echo "ref=$REF"
+            echo "push=$PUSH"
+            echo "release=$RELEASE"
+            echo "texlive_date=$date"
+            echo "base_image=$base_image"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    env:
+      TEXLIVE_DATE: ${{ needs.prepare.outputs.texlive_date }}
+      BASE_IMAGE: ${{ needs.prepare.outputs.base_image }}
+      PLATFORM: linux/${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          ref: ${{ needs.prepare.outputs.ref }}
 
       # A full build needs well over the runner's free space: TeX Live alone is 18 GB
       - name: Free disk space
@@ -60,37 +125,70 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Reusing the base keeps its TeX Live, so the version tag keeps its install date: the
-      # date of the texlive<year>.<date>-... tag that points at the same image as latest
-      - name: Use the published base
-        if: env.REUSE_BASE == 'true'
-        run: |
-          digest() { docker buildx imagetools inspect "$1" | awk '/^Digest:/ {print $2; exit}'; }
-          latest=$(digest "$CI_IMAGE:latest")
-          token=$(curl -fsSL "https://ghcr.io/token?scope=repository:${CI_IMAGE#ghcr.io/}:pull" | jq -r .token)
-          date=
-          for tag in $(curl -fsSL -H "Authorization: Bearer $token" "https://ghcr.io/v2/${CI_IMAGE#ghcr.io/}/tags/list" \
-                         | jq -r '.tags[]' | grep -E '^texlive[0-9]{4}\.[0-9]{8}-'); do
-            if [ "$(digest "$CI_IMAGE:$tag")" = "$latest" ]; then
-              date=$(echo "$tag" | sed -E 's/^texlive[0-9]{4}\.([0-9]{8})-.*/\1/')
-              break
-            fi
-          done
-          [ -n "$date" ] || { echo "::error::No dated tag points at $CI_IMAGE:latest"; exit 1; }
-          echo "Reusing $CI_IMAGE:latest ($latest), TeX Live installed on $date"
-          echo "TEXLIVE_DATE=$date" >> "$GITHUB_ENV"
-          echo "BASE_IMAGE=$CI_IMAGE@$latest" >> "$GITHUB_ENV"
-
       - name: Build and test
-        run: docker buildx bake --progress=plain ${BASE_IMAGE:+--set "*.contexts.base=docker-image://$BASE_IMAGE"} smoketest
-
-      - name: Push
-        if: env.PUSH == 'true'
-        run: docker buildx bake --progress=plain ${BASE_IMAGE:+--set "*.contexts.base=docker-image://$BASE_IMAGE"} --push ci dev
-
-      - name: Summary
-        if: env.PUSH == 'true'
         run: |
-          for image in texlive-ci texlive-devcontainer; do
-            docker buildx imagetools inspect "ghcr.io/steve-li-1998/$image:latest" | awk -v i="$image" '/^Digest:/ {print i, $2; exit}'
-          done | tee -a "$GITHUB_STEP_SUMMARY"
+          docker buildx bake --progress=plain --set "*.platform=$PLATFORM" \
+            ${BASE_IMAGE:+--set "*.contexts.base=docker-image://$BASE_IMAGE"} smoketest
+
+      # Push each image by digest only; the merge job tags the multi-platform image
+      - name: Push by digest
+        if: needs.prepare.outputs.push == 'true'
+        run: |
+          docker buildx bake --print --set "*.platform=$PLATFORM" \
+            ${BASE_IMAGE:+--set "*.contexts.base=docker-image://$BASE_IMAGE"} ci dev > bake.json
+          jq '.target |= with_entries(
+                .value.output = ["type=image,name=\(.value.tags[0] | sub(":[^:/]+$"; "")),push-by-digest=true,name-canonical=true,push=true"]
+                | .value.tags = [])' bake.json > push.json
+          docker buildx bake --progress=plain -f push.json --metadata-file meta.json ci dev
+          mkdir digests
+          for t in ci dev; do jq -r --arg t "$t" '.[$t]["containerimage.digest"]' meta.json > "digests/$t-${{ matrix.arch }}"; done
+          head digests/*
+
+      - uses: actions/upload-artifact@v4
+        if: needs.prepare.outputs.push == 'true'
+        with:
+          name: digests-${{ matrix.arch }}
+          path: digests/
+          retention-days: 1
+
+  merge:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.push == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      TEXLIVE_DATE: ${{ needs.prepare.outputs.texlive_date }}
+      RELEASE: ${{ needs.prepare.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digests-*
+          merge-multiple: true
+          path: digests
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag the multi-platform images
+        run: |
+          docker buildx bake --print ci dev > bake.json
+          for t in ci dev; do
+            name=$(jq -r --arg t "$t" '.target[$t].tags[0] | sub(":[^:/]+$"; "")' bake.json)
+            if [ "$RELEASE" = true ]; then
+              tags=$(jq -r --arg t "$t" '.target[$t].tags[]' bake.json)
+            else
+              tags="$name:test-${GITHUB_REF_NAME//\//-}"
+            fi
+            args=()
+            for tag in $tags; do args+=(-t "$tag"); done
+            docker buildx imagetools create "${args[@]}" "$name@$(cat "digests/$t-amd64")" "$name@$(cat "digests/$t-arm64")"
+            for tag in $tags; do
+              echo "$tag $(docker buildx imagetools inspect "$tag" | awk '/^Digest:/ {print $2; exit}')"
+            done | tee -a "$GITHUB_STEP_SUMMARY"
+          done
