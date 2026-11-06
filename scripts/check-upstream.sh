@@ -4,8 +4,9 @@
 # in the index; the submodule itself need not be checked out). Prints KEY=VALUE lines (for
 # $GITHUB_OUTPUT):
 #   rtex_old, rtex_new, ext_old, ext_new, template_old, template_new, changed=true|false
-# A release counts only once it is usable: rtex's Linux binary is attached to the release,
-# and the extension version is on the Marketplace (devcontainer.json installs it from there).
+# A release counts only once it is usable: rtex's Linux binaries (amd64 and arm64) are
+# attached to the release, and the extension version is on the Marketplace (devcontainer.json
+# installs it from there).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -17,9 +18,11 @@ ext_old=$(grep -o -E 'henryxiaoyang\.realtime-tex@[0-9][0-9.]*' .devcontainer/de
 
 release=$(api HenryXiaoYang/realtime-tex/releases/latest)
 rtex_new=$(jq -r .tag_name <<<"$release")
-if ! jq -e '.assets[] | select(.name == "rtex-x86_64-unknown-linux-gnu.tar.gz")' <<<"$release" >/dev/null; then
-    rtex_new=$rtex_old  # the binaries are attached a few minutes after the release is published
-fi
+for asset in rtex-x86_64-unknown-linux-gnu.tar.gz rtex-aarch64-unknown-linux-gnu.tar.gz; do
+    if ! jq -e --arg a "$asset" '.assets[] | select(.name == $a)' <<<"$release" >/dev/null; then
+        rtex_new=$rtex_old  # the binaries are attached a few minutes after the release is published
+    fi
+done
 
 ext_new=$(api HenryXiaoYang/realtime-tex-vsc-plugin/releases/latest | jq -r '.tag_name | ltrimstr("v")')
 marketplace=$(curl -fsS -X POST https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery \
