@@ -11,7 +11,7 @@ Docker images for writing LaTeX: a full TeX Live 2026 with diagram and code-list
 
 Both are public and need no login. Each is tagged `latest` and `texlive<year>.<date>-rtex<version>`, for example `texlive2026.20261101-rtex0.0.6`. The date is the day TeX Live was installed, because its packages keep changing within a TeX Live year. Pin that tag if you need a build to stay reproducible.
 
-The images are `linux/amd64` only and about 8 GB to download.
+The images are built for `linux/amd64` and `linux/arm64` (for example Apple Silicon Macs) and are about 8 GB to download.
 
 ### What's inside
 
