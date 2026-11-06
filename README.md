@@ -27,7 +27,7 @@ The dev container image also has the [rtex](https://github.com/HenryXiaoYang/rea
 
 ## Start a new project
 
-Copy the files in [`template/`](template/) into your project and fill in the placeholders. [`template/README.md`](template/README.md) has the steps and some notes on writing documents with these images.
+Start from [texlive-devcontainer-template](https://github.com/Steve-Li-1998/texlive-devcontainer-template) (**Use this template** on GitHub, or copy its files into your project) and fill in the placeholders. Its README has the steps and some notes on writing documents with these images. In this repository it is the `template/` submodule.
 
 The template contains a dev container configuration, a GitLab CI job, a `.latexmkrc` and a `.gitignore`. Opening the project with **Dev Containers: Reopen in Container** gives you:
 
