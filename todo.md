@@ -19,6 +19,7 @@
 
 - [ ] Pygments 改用 apt 安装 `python3-pygments`，不再需要 pip 和 `--break-system-packages`
 - [ ] 镜像地址改成 https，并用 `ARG TL_MIRROR` 支持指定固定镜像（`-repository`），避免 `mirror.ctan.org` 随机跳转导致安装中途失败
+- [ ] **让安装 TeX Live 更可靠**：install-tl 失败时清理已装的部分并重试，最多 3 次。每次重试都重新经过 `mirror.ctan.org` 分配镜像站，避开连不上的那个。起因：2026-11-06 GitHub Actions 的 amd64 runner 连不上分到的镜像站（`Connection timed out` 后 `Giving up`），完整重建在安装这一步失败。
 - [ ] 设置 `LANG=C.UTF-8` / `LC_ALL=C.UTF-8`，避免 minted 和 Python 遇到编码问题
 - [ ] 把两次 `apt-get update` 合并成一层，放在前面
 - [ ] 统一注释语言；删除第 46–47 行注释掉的验证（最后一行已经验证过）
