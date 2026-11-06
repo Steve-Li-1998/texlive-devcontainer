@@ -48,7 +48,7 @@ jobs:
     env:
       CI_IMAGE: ghcr.io/steve-li-1998/texlive-ci
       # a merged build-images PR has no inputs: reuse the base and push
-      REUSE_BASE: ${{ github.event_name == 'pull_request' || inputs.reuse_base }}
+      REUSE_BASE: ${{ github.event_name == 'pull_request' || github.event_name == 'push' || inputs.reuse_base }}
       PUSH: ${{ github.event_name == 'pull_request' || github.event_name == 'push' || inputs.push }}
       RELEASE: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
       REF: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
