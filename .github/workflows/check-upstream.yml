@@ -36,6 +36,8 @@ jobs:
           RTEX_NEW: ${{ steps.bump.outputs.rtex_new }}
           EXT_OLD: ${{ steps.bump.outputs.ext_old }}
           EXT_NEW: ${{ steps.bump.outputs.ext_new }}
+          TEMPLATE_OLD: ${{ steps.bump.outputs.template_old }}
+          TEMPLATE_NEW: ${{ steps.bump.outputs.template_new }}
         run: |
           branch=upstream-update
           title="Update"; changes=""; labels="upstream-update"
@@ -49,6 +51,10 @@ jobs:
             title="$title the Realtime TeX extension to $EXT_NEW"
             changes="$changes- Realtime TeX extension $EXT_OLD → [$EXT_NEW](https://github.com/HenryXiaoYang/realtime-tex-vsc-plugin/releases/tag/v$EXT_NEW) (.devcontainer/devcontainer.json)"$'\n'
           fi
+          if [ "$TEMPLATE_OLD" != "$TEMPLATE_NEW" ]; then
+            [ "$title" = "Update" ] && title="$title the template submodule" || title="$title, and the template"
+            changes="$changes- \`template/\` submodule ${TEMPLATE_OLD:0:7} → [${TEMPLATE_NEW:0:7}](https://github.com/Steve-Li-1998/texlive-devcontainer-template/compare/$TEMPLATE_OLD...$TEMPLATE_NEW)"$'\n'
+          fi
 
           {
             echo "Found by the daily upstream check."
@@ -58,18 +64,20 @@ jobs:
             if [[ "$labels" == *build-images* ]]; then
               echo "Merging this PR runs the \`images\` workflow: it rebuilds the dev image on the published TeX Live base, compiles the test document and pushes the images."
             else
-              echo "Only the extension changed, so merging does not rebuild the images."
+              echo "rtex did not change, so merging does not rebuild the images."
             fi
             if [ "$EXT_OLD" != "$EXT_NEW" ]; then
               echo
-              echo "- [ ] Update the extension version in the template repository (\`template/\` submodule) too: this workflow cannot push there."
+              echo "The template repository has its own daily check and PR for the extension; once that is merged, this check moves \`template/\` along."
             fi
           } > body.md
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git commit -q -a -m "$title"
+          # the script staged the submodule pointer in the index; add the edited files to it
+          git add Dockerfile docker-bake.hcl .devcontainer/devcontainer.json
+          git commit -q -m "$title"
           git push -f origin "$branch"
 
           gh label create upstream-update --color 0e8a16 --description "Opened by the daily upstream check" --force

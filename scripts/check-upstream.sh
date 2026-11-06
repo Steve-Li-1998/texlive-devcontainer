@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Look for rtex and Realtime TeX releases newer than the versions pinned here, and bump the
-# pins in place. Prints KEY=VALUE lines (for $GITHUB_OUTPUT):
-#   rtex_old, rtex_new, ext_old, ext_new, changed=true|false
+# pins in place. Also move the template/ submodule to the template repository's main (staged
+# in the index; the submodule itself need not be checked out). Prints KEY=VALUE lines (for
+# $GITHUB_OUTPUT):
+#   rtex_old, rtex_new, ext_old, ext_new, template_old, template_new, changed=true|false
 # A release counts only once it is usable: rtex's Linux binary is attached to the release,
 # and the extension version is on the Marketplace (devcontainer.json installs it from there).
 set -euo pipefail
@@ -41,5 +43,15 @@ else
     ext_new=$ext_old
 fi
 
-printf 'rtex_old=%s\nrtex_new=%s\next_old=%s\next_new=%s\nchanged=%s\n' \
-    "$rtex_old" "$rtex_new" "$ext_old" "$ext_new" "$changed"
+# the template repository has its own daily check for the extension; follow its main
+template_old=$(git ls-tree HEAD template | awk '{print $3}')
+template_new=$(git ls-remote "$(git config -f .gitmodules submodule.template.url)" refs/heads/main | cut -f1)
+if [ -n "$template_new" ] && [ "$template_new" != "$template_old" ]; then
+    git update-index --cacheinfo "160000,$template_new,template"
+    changed=true
+else
+    template_new=$template_old
+fi
+
+printf 'rtex_old=%s\nrtex_new=%s\next_old=%s\next_new=%s\ntemplate_old=%s\ntemplate_new=%s\nchanged=%s\n' \
+    "$rtex_old" "$rtex_new" "$ext_old" "$ext_new" "$template_old" "$template_new" "$changed"
