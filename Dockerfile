@@ -142,7 +142,18 @@ RUN apt-get update && \
 
 USER ${USERNAME}
 
+LABEL org.opencontainers.image.source="https://github.com/Steve-Li-1998/texlive-devcontainer"
+
+# ---------------------------------------------------------------------------
+# Smoke test: compile a document with Mermaid, PlantUML and minted in the dev image
+# Build with: docker buildx bake smoketest
+# ---------------------------------------------------------------------------
+FROM dev AS smoketest
+RUN --mount=type=bind,source=tests,target=/tests sh /tests/smoke.sh
+
 # ---------------------------------------------------------------------------
 # CI image (default target, so a plain `docker build .` is unchanged)
 # ---------------------------------------------------------------------------
 FROM base AS ci
+
+LABEL org.opencontainers.image.source="https://github.com/Steve-Li-1998/texlive-devcontainer"

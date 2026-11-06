@@ -59,10 +59,12 @@ docker build --target dev -t texlive-dev . # the dev container image
 
 A build installs TeX Live from CTAN, which takes about 20 minutes and over 20 GB of disk space.
 
-[`docker-bake.hcl`](docker-bake.hcl) builds both images and pushes them to the registries listed in it, which requires write access:
+The published images are built by the [`images`](.github/workflows/images.yml) workflow, started by hand from the Actions tab. It compiles a test document in the dev image ([`tests/smoke.sh`](tests/smoke.sh)) and pushes only if that succeeds. By default it reuses the published TeX Live base and only rebuilds the rest; turn off **reuse_base** to reinstall TeX Live with the latest CTAN packages.
+
+The same build runs locally with [`docker-bake.hcl`](docker-bake.hcl):
 
 ```bash
-docker buildx bake --push
+docker buildx bake smoketest   # build and test, push nothing
 ```
 
 `.devcontainer/` opens this repository in an image built from the local `Dockerfile`, for testing changes to it. New projects should use the template instead, which pulls the published image.

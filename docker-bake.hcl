@@ -1,11 +1,10 @@
-// Build and push both images in one run so they share the base stage:
-//   docker buildx bake --push
+// Built and pushed by .github/workflows/images.yml. Locally:
+//   docker buildx bake smoketest   # build and test, push nothing
+//   docker buildx bake --push      # push both images
 // Base names: ci pushes <name>-ci, dev pushes <name>-devcontainer, each tagged
 // latest and texlive<year>.<build date>-rtex<rtex version>
 variable "IMAGES" {
   default = [
-    "registry.gitlab.fachschaften.org/masterarbeit/thesis/texlive",
-    "registry.gitlab.fachschaften.org/masterarbeit/final-presentation/texlive",
     "ghcr.io/steve-li-1998/texlive",
   ]
 }
@@ -33,6 +32,13 @@ variable "VERSION_TAG" {
 
 group "default" {
   targets = ["ci", "dev"]
+}
+
+// Builds the dev image and compiles a test document in it (tests/smoke.sh); pushes nothing
+target "smoketest" {
+  inherits = ["dev"]
+  target   = "smoketest"
+  tags     = []
 }
 
 target "ci" {
