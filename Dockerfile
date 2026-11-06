@@ -106,7 +106,7 @@ RUN test -d "/usr/local/texlive/${TEXLIVE_VERSION}" || \
 # ---------------------------------------------------------------------------
 FROM base AS dev
 
-ARG RTEX_VERSION=v0.0.6
+ARG RTEX_VERSION=v0.0.7
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
