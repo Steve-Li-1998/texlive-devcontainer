@@ -1,0 +1,82 @@
+name: check-upstream
+
+# Daily: if rtex or the Realtime TeX extension has a newer release, open (or update) a pull
+# request that bumps the pinned versions. A PR that changes rtex gets the build-images label;
+# merging it runs the images workflow, which builds, tests and pushes the images.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: check-upstream
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Look for newer releases
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check-upstream.sh | tee -a "$GITHUB_OUTPUT"
+
+      - name: Open or update the pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RTEX_OLD: ${{ steps.bump.outputs.rtex_old }}
+          RTEX_NEW: ${{ steps.bump.outputs.rtex_new }}
+          EXT_OLD: ${{ steps.bump.outputs.ext_old }}
+          EXT_NEW: ${{ steps.bump.outputs.ext_new }}
+        run: |
+          branch=upstream-update
+          title="Update"; changes=""; labels="upstream-update"
+          if [ "$RTEX_OLD" != "$RTEX_NEW" ]; then
+            title="$title rtex to $RTEX_NEW"
+            changes="$changes- rtex $RTEX_OLD → [$RTEX_NEW](https://github.com/HenryXiaoYang/realtime-tex/releases/tag/$RTEX_NEW) (Dockerfile, docker-bake.hcl)"$'\n'
+            labels="$labels,build-images"
+          fi
+          if [ "$EXT_OLD" != "$EXT_NEW" ]; then
+            [ "$title" = "Update" ] || title="$title and"
+            title="$title the Realtime TeX extension to $EXT_NEW"
+            changes="$changes- Realtime TeX extension $EXT_OLD → [$EXT_NEW](https://github.com/HenryXiaoYang/realtime-tex-vsc-plugin/releases/tag/v$EXT_NEW) (.devcontainer/devcontainer.json)"$'\n'
+          fi
+
+          {
+            echo "Found by the daily upstream check."
+            echo
+            printf '%s' "$changes"
+            echo
+            if [[ "$labels" == *build-images* ]]; then
+              echo "Merging this PR runs the \`images\` workflow: it rebuilds the dev image on the published TeX Live base, compiles the test document and pushes the images."
+            else
+              echo "Only the extension changed, so merging does not rebuild the images."
+            fi
+            if [ "$EXT_OLD" != "$EXT_NEW" ]; then
+              echo
+              echo "- [ ] Update the extension version in the template repository (\`template/\` submodule) too: this workflow cannot push there."
+            fi
+          } > body.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -a -m "$title"
+          git push -f origin "$branch"
+
+          gh label create upstream-update --color 0e8a16 --description "Opened by the daily upstream check" --force
+          gh label create build-images --color 1d76db --description "Merging builds and pushes the images" --force
+          if [ "$(gh pr view "$branch" --json state -q .state 2>/dev/null)" = OPEN ]; then
+            gh pr edit "$branch" --title "$title" --body-file body.md --add-label "$labels"
+            [[ "$labels" == *build-images* ]] || gh pr edit "$branch" --remove-label build-images
+          else
+            gh pr create --base main --head "$branch" --title "$title" --body-file body.md --label "$labels"
+          fi

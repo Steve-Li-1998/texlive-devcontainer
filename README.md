@@ -61,6 +61,8 @@ A build installs TeX Live from CTAN, which takes about 20 minutes and over 20 GB
 
 The published images are built by the [`images`](.github/workflows/images.yml) workflow, started by hand from the Actions tab. It compiles a test document in the dev image ([`tests/smoke.sh`](tests/smoke.sh)) and pushes only if that succeeds. By default it reuses the published TeX Live base and only rebuilds the rest; turn off **reuse_base** to reinstall TeX Live with the latest CTAN packages.
 
+The [`check-upstream`](.github/workflows/check-upstream.yml) workflow checks daily for new releases of rtex and the Realtime TeX extension and opens a pull request that updates them. Merging a PR that updates rtex runs `images`.
+
 The same build runs locally with [`docker-bake.hcl`](docker-bake.hcl):
 
 ```bash

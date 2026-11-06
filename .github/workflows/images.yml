@@ -2,7 +2,12 @@ name: images
 
 # Builds the ci and dev images, compiles a test document in the dev image and pushes both to
 # ghcr.io. Versions come from docker-bake.hcl (keep the Dockerfile's ARG defaults in sync).
+# Runs by hand, or when a pull request labeled build-images (opened by check-upstream) is
+# merged; then it reuses the published base and pushes.
 on:
+  pull_request:
+    types: [closed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       reuse_base:
@@ -24,15 +29,21 @@ concurrency:
 
 env:
   CI_IMAGE: ghcr.io/steve-li-1998/texlive-ci
-  REUSE_BASE: ${{ inputs.reuse_base }}
-  PUSH: ${{ inputs.push }}
+  # a merged build-images PR has no inputs: reuse the base and push
+  REUSE_BASE: ${{ github.event_name == 'pull_request' || inputs.reuse_base }}
+  PUSH: ${{ github.event_name == 'pull_request' || inputs.push }}
 
 jobs:
   build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'build-images'))
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
 
       # A full build needs well over the runner's free space: TeX Live alone is 18 GB
       - name: Free disk space
