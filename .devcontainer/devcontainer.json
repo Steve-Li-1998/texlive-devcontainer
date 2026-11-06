@@ -18,7 +18,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "henryxiaoyang.realtime-tex@0.0.3",
+        "henryxiaoyang.realtime-tex@0.0.5",
         "james-yu.latex-workshop",
         "streetsidesoftware.code-spell-checker",
         "ltex-plus.vscode-ltex-plus"
