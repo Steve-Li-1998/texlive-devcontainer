@@ -14,7 +14,7 @@ The current `texlive-ci:latest` base was assembled by hand on 2026-11-06 from th
 
 ## Template submodule
 
-`template/` is a submodule: [Steve-Li-1998/texlive-devcontainer-template](https://github.com/Steve-Li-1998/texlive-devcontainer-template). Clone with `--recurse-submodules` (or run `git submodule update --init`). To change the template, commit and push inside `template/` first, then commit the new submodule pointer in this repository. Its `.devcontainer/devcontainer.json` must stay in step with this repository's when settings change. It installs the extension without a version (the latest, like the `latest` image it uses) and has no update check of its own.
+`template/` is a submodule: [Steve-Li-1998/texlive-devcontainer-template](https://github.com/Steve-Li-1998/texlive-devcontainer-template). Clone with `--recurse-submodules` (or run `git submodule update --init`). To change the template, commit and push inside `template/` first, then commit the new submodule pointer in this repository. Its `.devcontainer/devcontainer.json` must stay in step with this repository's when settings change, except for the main-file settings (`realtimeTex.mainFile`, `latex-workshop.latex.search.rootFiles.include`), which only the template has: this repository has no `main.tex`. It installs the extension without a version (the latest, like the `latest` image it uses) and has no update check of its own.
 
 ## Hotfixes
 
