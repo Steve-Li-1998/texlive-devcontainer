@@ -15,11 +15,27 @@
   "remoteEnv": {
     "shell_escape": "t"
   },
+  // Persist AI agent logins/settings across rebuilds: one named volume per agent config dir
+  // (named, not anonymous: a rebuild creates a fresh anonymous volume). Add a line per new agent.
+  "mounts": [
+    "source=agent-claude,target=/home/vscode/.claude,type=volume",
+    "source=agent-copilot,target=/home/vscode/.copilot,type=volume",
+    "source=agent-codex,target=/home/vscode/.codex,type=volume",
+    "source=agent-gemini,target=/home/vscode/.gemini,type=volume"
+  ],
+  // Claude Code keeps ~/.claude.json outside ~/.claude unless this is set
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  // New volumes are owned by root; hand them to vscode (UID may be remapped)
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude /home/vscode/.copilot /home/vscode/.codex /home/vscode/.gemini",
   "customizations": {
     "vscode": {
       "extensions": [
         "henryxiaoyang.realtime-tex@0.0.5",
         "james-yu.latex-workshop",
+        // "anthropic.claude-code",
+        // "openai.chatgpt",
         "streetsidesoftware.code-spell-checker",
         "ltex-plus.vscode-ltex-plus"
       ],
