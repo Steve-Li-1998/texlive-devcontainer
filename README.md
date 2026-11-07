@@ -29,7 +29,7 @@ The dev container image also has the [rtex](https://github.com/HenryXiaoYang/rea
 
 Start from [texlive-devcontainer-template](https://github.com/Steve-Li-1998/texlive-devcontainer-template) (**Use this template** on GitHub, or copy its files into your project) and fill in the placeholders. Its README has the steps and some notes on writing documents with these images. In this repository it is the `template/` submodule.
 
-The template contains a dev container configuration, a GitLab CI job, a `.latexmkrc` and a `.gitignore`. Opening the project with **Dev Containers: Reopen in Container** gives you:
+The template contains a dev container configuration, a GitLab CI job, a GitHub Actions workflow, a `.latexmkrc` and a `.gitignore`. Opening the project with **Dev Containers: Reopen in Container** gives you:
 
 - [Realtime TeX](https://marketplace.visualstudio.com/items?itemName=henryxiaoyang.realtime-tex) for the live preview
 - [LaTeX Workshop](https://marketplace.visualstudio.com/items?itemName=James-Yu.latex-workshop) for editing support and on-demand builds into `out/`
