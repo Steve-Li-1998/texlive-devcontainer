@@ -17,7 +17,7 @@ variable "TEXLIVE_VERSION" {
 }
 
 variable "RTEX_VERSION" {
-  default = "v0.0.7"
+  default = "v0.0.8"
 }
 
 // The day TeX Live was installed: packages keep changing within a TeX Live year. When reusing
