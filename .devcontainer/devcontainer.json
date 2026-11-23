@@ -32,7 +32,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "henryxiaoyang.realtime-tex@0.0.5",
+        "henryxiaoyang.realtime-tex@0.0.6",
         "james-yu.latex-workshop",
         // "anthropic.claude-code",
         // "openai.chatgpt",
